@@ -55,13 +55,13 @@ function TaskList({
             </button>
           </div>
 
-          <div className={`relative ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
+          {/* <div className={`relative ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
             <button className="px-4 py-2 flex items-center space-x-2">
               <i className="fas fa-sort text-blue-500"></i>
               <span>Sort</span>
               <i className="fas fa-chevron-down text-sm"></i>
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
