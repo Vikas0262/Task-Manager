@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${import.meta.env.VITE_BACKEND_URL}api`;
 
 function Signup({ darkMode, onClose, onSwitchToLogin, onSignupSuccess }) {
   const [formData, setFormData] = useState({
