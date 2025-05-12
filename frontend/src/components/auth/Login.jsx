@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Signup from './Signup';
 
-const API_URL = `${import.meta.env.VITE_BACKEND_URL}api`;
+// const API_URL = ;
 
 function Login({ darkMode, onClose, onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ function Login({ darkMode, onClose, onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

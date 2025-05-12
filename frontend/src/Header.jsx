@@ -1,18 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/auth/Login';
 
-function Header({ darkMode, toggleDarkMode, isOffline, searchQuery, setSearchQuery, isSidebarOpen, toggleSidebar }) {
+function Header({ darkMode, toggleDarkMode, isOffline, searchQuery, setSearchQuery, isSidebarOpen, toggleSidebar, user, setUser }) {
   const [showLogin, setShowLogin] = useState(false);
-  const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-
-  useEffect(() => {
-    // Check for existing user session
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
@@ -22,7 +13,6 @@ function Header({ darkMode, toggleDarkMode, isOffline, searchQuery, setSearchQue
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    console.log(user)
     // Trigger storage event for other tabs/windows
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'token',

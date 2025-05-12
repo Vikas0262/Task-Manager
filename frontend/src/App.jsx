@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { categories } from './utils';
@@ -6,8 +6,13 @@ import MainLayout from './layouts/MainLayout';
 import Footer from './layouts/Footer';
 import { useTasks } from './hooks/useTasks';
 import { useAppUI } from './hooks/useAppUI';
+import Login from './components/auth/Login';
 
 function App() {
+  const [showLogin, setShowLogin] = useState(false);
+  const [user, setUser] = useState(null);
+  const [redirectTimer, setRedirectTimer] = useState(null);
+
   const {
     darkMode,
     isOffline,
@@ -34,6 +39,32 @@ function App() {
     handleToggleSubtaskCompletion
   } = useTasks();
 
+  useEffect(() => {
+    // Check for existing user session
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      // Set a timer to show login after 2 seconds if no user is found
+      const timer = setTimeout(() => {
+        setShowLogin(true);
+      }, 4000);
+      setRedirectTimer(timer);
+    }
+
+    // Cleanup timer on unmount
+    return () => {
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+      }
+    };
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setShowLogin(false);
+  };
+
   return (
     <div className={`min-h-screen flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-800'}`}>
       <Header 
@@ -44,6 +75,8 @@ function App() {
         setSearchQuery={setSearchQuery}
         isSidebarOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
+        user={user}
+        setUser={setUser}
       />
       
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
@@ -87,6 +120,14 @@ function App() {
       </div>
 
       <Footer darkMode={darkMode} />
+
+      {showLogin && (
+        <Login 
+          darkMode={darkMode} 
+          onClose={() => setShowLogin(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
     </div>
   );
 }
