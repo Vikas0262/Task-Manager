@@ -15,8 +15,14 @@ function TaskList({
   viewMode,
   setViewMode
 }) {
-  const filteredTasks = filterTasks(tasks, selectedCategory, searchQuery);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [filters, setFilters] = useState({
+    priority: '',
+    dueDate: '',
+    completed: '',
+  });
+  
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -25,6 +31,8 @@ function TaskList({
     dueTime: '',
     priority: 'medium',
   });
+
+  const filteredTasks = filterTasks(tasks, selectedCategory, searchQuery, filters);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -105,12 +113,74 @@ function TaskList({
             </button>
           </div>
 
-          <div className={`relative ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
-            <button className="px-4 py-2 flex items-center space-x-2">
+          <div className="relative">
+            <button 
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+              className={`px-4 py-2 flex items-center space-x-2 rounded-lg ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} transition-colors`}
+            >
               <i className="fas fa-filter text-blue-500"></i>
               <span>Filter</span>
-              <i className="fas fa-chevron-down text-sm"></i>
+              <i className={`fas fa-chevron-down text-sm transition-transform ${showFilterMenu ? 'transform rotate-180' : ''}`}></i>
             </button>
+            
+            {showFilterMenu && (
+              <div className={`absolute right-0 mt-2 w-64 rounded-xl shadow-xl z-10 ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                <div className="p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Priority</label>
+                    <select
+                      value={filters.priority}
+                      onChange={(e) => setFilters({...filters, priority: e.target.value})}
+                      className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                    >
+                      <option value="">All Priorities</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Due Date</label>
+                    <select
+                      value={filters.dueDate}
+                      onChange={(e) => setFilters({...filters, dueDate: e.target.value})}
+                      className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                    >
+                      <option value="">Anytime</option>
+                      <option value="today">Today</option>
+                      <option value="tomorrow">Tomorrow</option>
+                      <option value="week">This Week</option>
+                      <option value="overdue">Overdue</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={filters.completed === 'completed'}
+                        onChange={(e) => setFilters({
+                          ...filters,
+                          completed: e.target.checked ? 'completed' : ''
+                        })}
+                        className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                      />
+                      <span className="text-sm">Show completed</span>
+                    </label>
+                  </div>
+                  
+                  {(filters.priority || filters.dueDate || filters.completed) && (
+                    <button
+                      onClick={() => setFilters({ priority: '', dueDate: '', completed: '' })}
+                      className="w-full mt-2 px-4 py-2 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* <div className={`relative ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
@@ -124,13 +194,21 @@ function TaskList({
       </div>
 
       <div className="p-6 pt-0">
-        <div className="mb-6">
+        <div className="mb-6 w-full">
           <button
             onClick={() => setShowTaskForm(true)}
-            className={`flex items-center space-x-2 px-6 py-3.5 rounded-xl ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium text-base shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200`}
+            className={`group w-full flex items-center justify-center space-x-3 px-6 py-4 rounded-xl ${darkMode 
+              ? 'bg-gray-800 border border-gray-700 hover:bg-blue-600/90 hover:border-blue-500 text-white' 
+              : 'bg-white border-2 border-blue-100 hover:bg-blue-50 hover:border-blue-300 text-blue-600 hover:text-blue-700'} 
+              font-medium text-base shadow-sm hover:shadow-md transform hover:-translate-y-0.5 
+              transition-all duration-200 ease-out`}
           >
-            <i className="fas fa-plus text-lg"></i>
-            <span>Add New Task</span>
+            <i className={`fas fa-plus-circle text-xl transition-all duration-200 ${
+              darkMode 
+                ? 'group-hover:text-white' 
+                : 'text-blue-500 group-hover:text-blue-600'
+            }`}></i>
+            <span className="tracking-wide font-semibold">Add New Task</span>
           </button>
         </div>
 

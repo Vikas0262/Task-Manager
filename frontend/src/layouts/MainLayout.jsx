@@ -85,12 +85,12 @@ function MainLayout({
       </div>
 
       {/* New Task Button */}
-      <button
+      {/* <button
         onClick={() => setShowCreateTaskModal(true)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
       >
         <i className="fas fa-plus text-xl"></i>
-      </button>
+      </button> */}
 
       {/* Create Task Modal */}
       {showCreateTaskModal && (

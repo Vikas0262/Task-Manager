@@ -19,7 +19,7 @@ function Sidebar({ darkMode, selectedCategory, setSelectedCategory, tasks, categ
       mt-16 md:mt-0
     `}>
       <div className="p-4">
-        <button
+        {/* <button
           className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors"
           onClick={() => {
             setSelectedTask(null);
@@ -29,7 +29,7 @@ function Sidebar({ darkMode, selectedCategory, setSelectedCategory, tasks, categ
         >
           <i className="fas fa-plus"></i>
           <span>New Task</span>
-        </button>
+        </button> */}
       </div>
 
       <nav className="flex-1 overflow-y-auto">

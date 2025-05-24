@@ -101,12 +101,62 @@ export const categories = [
     },
   ];
   
-  export function filterTasks(tasks, selectedCategory, searchQuery) {
+  export function filterTasks(tasks, selectedCategory, searchQuery, filters = {}) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()));
+    
     return tasks.filter(task => {
+      // Category filter
       const matchesCategory = selectedCategory === 'all' || task.categoryId === selectedCategory;
+      
+      // Search filter
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      
+      // Priority filter
+      const matchesPriority = !filters.priority || task.priority === filters.priority;
+      
+      // Due date filter
+      let matchesDueDate = true;
+      if (filters.dueDate) {
+        const taskDate = task.dueDate ? new Date(task.dueDate) : null;
+        if (taskDate) {
+          taskDate.setHours(0, 0, 0, 0);
+          
+          switch(filters.dueDate) {
+            case 'today':
+              matchesDueDate = taskDate.getTime() === today.getTime();
+              break;
+            case 'tomorrow':
+              matchesDueDate = taskDate.getTime() === tomorrow.getTime();
+              break;
+            case 'week':
+              matchesDueDate = taskDate >= today && taskDate <= endOfWeek;
+              break;
+            case 'overdue':
+              matchesDueDate = taskDate < today && !task.completed;
+              break;
+            default:
+              matchesDueDate = true;
+          }
+        } else {
+          matchesDueDate = false;
+        }
+      }
+      
+      // Completed filter
+      let matchesCompleted = true;
+      if (filters.completed === 'completed') {
+        matchesCompleted = task.completed === true;
+      }
+      
+      return matchesCategory && matchesSearch && matchesPriority && matchesDueDate && matchesCompleted;
     });
   }
   
