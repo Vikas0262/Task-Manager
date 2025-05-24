@@ -75,8 +75,8 @@ export const useTasks = () => {
   }, []);
 
   // Add new task
-  const handleAddNewTask = async (title) => {
-    if (!title.trim()) return;
+  const handleAddNewTask = async (taskData) => {
+    if (!taskData.title?.trim()) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -90,24 +90,28 @@ export const useTasks = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-          
         },
-
         body: JSON.stringify({
-          title,
-          categoryId: selectedCategory === 'all' ? null : selectedCategory
+          title: taskData.title,
+          description: taskData.description || '',
+          priority: taskData.priority || 'medium',
+          category: taskData.category || (selectedCategory === 'all' ? null : selectedCategory),
+          dueDate: taskData.dueDate || null,
+          dueTime: taskData.dueTime || null
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add task');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add task');
       }
 
       const newTask = await response.json();
       setTasks([...tasks, newTask]);
-      setNewTaskTitle('');
+      return { success: true };
     } catch (err) {
       setError(err.message);
+      return { success: false, error: err.message };
     }
   };
 

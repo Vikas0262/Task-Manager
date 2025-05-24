@@ -1,12 +1,50 @@
 import React, { useState } from 'react';
-import { getPriorityColor, getCategoryColor, getCategoryIcon, formatDate } from './utils';
+import { getCategoryIcon } from './utils';
 
 function TaskItem({ task, index, darkMode, filteredTasks, setSelectedTask, toggleTaskCompletion, deleteTask, categories }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const category = categories.find(cat => cat.id === task.categoryId);
-  const categoryColor = category?.color.replace('bg-', '') || 'gray';
-  const subtasks = task.subtasks || [];
-  const collaborators = task.collaborators || [];
+  
+  // Format the due date for display
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+  
+  // Format the due time for display
+  const formatDisplayTime = (timeString) => {
+    if (!timeString) return null;
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+  
+  // Priority display configuration
+  const _PRIORITY_CONFIG = {
+    high: { 
+      class: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      icon: 'fas fa-arrow-up'
+    },
+    medium: { 
+      class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      icon: 'fas fa-equals'
+    },
+    low: { 
+      class: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      icon: 'fas fa-arrow-down'
+    }
+  };
+  
+  const priorityConfig = _PRIORITY_CONFIG[task.priority] || _PRIORITY_CONFIG.medium;
+  const displayDate = formatDisplayDate(task.dueDate);
+  const displayTime = formatDisplayTime(task.dueTime);
 
   const toggleMenu = (e) => {
     e.stopPropagation();
@@ -49,30 +87,43 @@ function TaskItem({ task, index, darkMode, filteredTasks, setSelectedTask, toggl
 
       {/* Task Content */}
       <div className="flex-1 min-w-0">
-        <h3 className={`font-medium text-base mb-1 truncate pr-8 sm:pr-0 ${
-          task.completed ? 'line-through text-gray-500' : darkMode ? 'text-white' : 'text-gray-900'
-        }`}>
-          {task.title}
-        </h3>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          {task.dueDate && (
+        <div className="flex items-center justify-between mb-1">
+          <h3 className={`font-medium text-base truncate pr-2 ${
+            task.completed ? 'line-through text-gray-500' : darkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            {task.title}
+          </h3>
+          {task.priority && (
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityConfig.class}`}>
+              <i className={`${priorityConfig.icon} mr-1`}></i>
+              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+            </span>
+          )}
+        </div>
+        
+        {task.description && (
+          <p className={`text-sm mb-2 line-clamp-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {task.description}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          {displayDate && (
             <div className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              <i className="far fa-calendar-alt mr-1"></i>
-              <span className="hidden xs:inline">{formatDate(task.dueDate)}</span>
+              <i className="far fa-calendar-alt mr-1.5"></i>
+              <span className="text-xs">
+                {displayDate}
+                {displayTime && ` • ${displayTime}`}
+              </span>
             </div>
           )}
 
-          {subtasks.length > 0 && (
-            <div className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              <i className="fas fa-tasks mr-1"></i>
-              <span>{subtasks.filter(st => st.completed).length}/{subtasks.length}</span>
+          {category && (
+            <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-opacity-20 ${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
+              <i className={`fas ${getCategoryIcon(task.categoryId)} mr-1.5`}></i>
+              <span className="truncate max-w-[100px]">{category.name}</span>
             </div>
           )}
-
-          <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${getCategoryColor(task.categoryId)} bg-opacity-20 text-${categoryColor}-700`}>
-            <i className={`fas ${getCategoryIcon(task.categoryId)} mr-1`}></i>
-            <span className="truncate max-w-[100px]">{category?.name || 'Uncategorized'}</span>
-          </div>
         </div>
       </div>
 
@@ -80,28 +131,6 @@ function TaskItem({ task, index, darkMode, filteredTasks, setSelectedTask, toggl
       <div className={`flex items-center gap-3 ${isMenuOpen ? 'flex' : 'hidden sm:flex'} ${
         isMenuOpen ? 'w-full justify-end sm:w-auto' : ''
       }`}>
-        {task.priority && (
-          <div className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)} text-white shadow-sm`}>
-            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-          </div>
-        )}
-
-        {collaborators.length > 0 && (
-          <div className="flex -space-x-2">
-            {collaborators.map((collaborator, i) => (
-              <div
-                key={i}
-                className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-xs font-medium border-2 ${
-                  darkMode ? 'border-gray-800' : 'border-white'
-                } text-white shadow-sm hover:scale-110 transition-transform`}
-                title={collaborator}
-              >
-                {collaborator.charAt(0)}
-              </div>
-            ))}
-          </div>
-        )}
-
         <button
           className={`w-8 h-8 rounded-full ${
             darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
