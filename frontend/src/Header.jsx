@@ -103,7 +103,10 @@ function Header({ darkMode, toggleDarkMode, isOffline, searchQuery, setSearchQue
                 onClick={() => setShowDropdown(!showDropdown)}
               >
                 <span className="text-sm font-medium">
-                  {user.fullName.split(' ').map(n => n[0]).join('')}
+                  {user.fullName
+                    .split(' ')
+                    .map(n => n ? n[0].toUpperCase() : '')
+                    .join('')}
                 </span>
               </div>
               {showDropdown && (
