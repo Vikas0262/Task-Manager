@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { filterTasks, formatDate, getDaysLeft, getSubtaskCompletionPercentage, getPriorityColor, getCategoryColor, getCategoryIcon } from './utils';
 
 function TaskBoard({
@@ -25,6 +25,61 @@ function TaskBoard({
   const [showSortMenu, setShowSortMenu] = React.useState(false);
   const [sortBy, setSortBy] = React.useState('dueDate');
   const [sortOrder, setSortOrder] = React.useState('asc');
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    category: categories[0]?.id || '',
+    dueDate: '',
+    dueTime: '',
+    priority: 'medium',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewTask(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAddTask = async (e) => {
+    e.preventDefault();
+    if (!newTask.title.trim()) return;
+    
+    const taskData = {
+      title: newTask.title,
+      description: newTask.description || '',
+      category: newTask.category,
+      priority: newTask.priority
+    };
+    
+    if (newTask.dueDate) {
+      const date = new Date(newTask.dueDate);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      taskData.dueDate = `${year}-${month}-${day}`;
+    }
+    
+    if (newTask.dueTime) {
+      taskData.dueTime = newTask.dueTime;
+    }
+    
+    const result = await addNewTask(taskData);
+
+    if (result.success) {
+      setNewTask({
+        title: '',
+        description: '',
+        category: categories[0]?.id || '',
+        dueDate: '',
+        dueTime: '',
+        priority: 'medium',
+      });
+      setShowTaskForm(false);
+    }
+  };
   
   const filteredTasks = React.useMemo(() => {
     let result = filterTasks(tasks, selectedCategory, searchQuery, filters);
@@ -198,28 +253,17 @@ function TaskBoard({
       </div>
 
       <div className="p-6 pt-0">
-        <div className={`mb-6 flex items-center ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-3`}>
-          <i className="fas fa-plus text-blue-500 mx-3"></i>
-          <input
-            id="add-task-input"
-            type="text"
-            placeholder="Add a new task..."
-            className={`flex-1 border-none focus:outline-none text-sm ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                addNewTask(newTaskTitle);
-              }
-            }}
-          />
-          <button
-            onClick={() => addNewTask(newTaskTitle)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Add Task
-          </button>
-        </div>
+        <button
+          onClick={() => setShowTaskForm(true)}
+          className={`w-full mb-6 flex items-center justify-center space-x-3 px-6 py-4 rounded-xl ${
+            darkMode 
+              ? 'bg-gray-800 border border-gray-700 hover:bg-blue-600/90 hover:border-blue-500 text-white' 
+              : 'bg-white border border-gray-200 hover:bg-blue-50 hover:border-blue-400 text-gray-700'
+          } transition-colors duration-200`}
+        >
+          <i className="fas fa-plus text-blue-500 group-hover:text-white"></i>
+          <span className="font-medium">Add new task</span>
+        </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTasks.length > 0 ? (
@@ -337,6 +381,123 @@ function TaskBoard({
           )}
         </div>
       </div>
+
+      {showTaskForm && (
+        <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          <div className={`w-full max-w-xl rounded-xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'} p-8`} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Add New Task</h3>
+              <button 
+                onClick={() => setShowTaskForm(false)}
+                className="text-gray-400 hover:text-gray-200"
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddTask}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={newTask.title}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={newTask.description}
+                    onChange={handleInputChange}
+                    rows="3"
+                    className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Category</label>
+                    <select
+                      name="category"
+                      value={newTask.category}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    >
+                      {categories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Priority</label>
+                    <select
+                      name="priority"
+                      value={newTask.priority}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={newTask.dueDate}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="task-due-time" className="block text-sm font-medium mb-1">Due Time</label>
+                    <input
+                      id="task-due-time"
+                      type="time"
+                      name="dueTime"
+                      value={newTask.dueTime}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowTaskForm(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-2"
+                  >
+                    <i className="fas fa-plus"></i>
+                    <span>Add Task</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
